@@ -12,6 +12,7 @@
 		7D9CE8CA1F913EA80010A5FB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7D9CE8C81F913EA80010A5FB /* Main.storyboard */; };
 		7D9CE8CC1F913EA80010A5FB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7D9CE8CB1F913EA80010A5FB /* Assets.xcassets */; };
 		7D9CE8CF1F913EA80010A5FB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7D9CE8CD1F913EA80010A5FB /* LaunchScreen.storyboard */; };
+		7D9CE8D81F913F040010A5FB /* CalculatorBrain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D9CE8D71F913F040010A5FB /* CalculatorBrain.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +23,7 @@
 		7D9CE8CB1F913EA80010A5FB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7D9CE8CE1F913EA80010A5FB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		7D9CE8D01F913EA80010A5FB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7D9CE8D71F913F040010A5FB /* CalculatorBrain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorBrain.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,14 +56,23 @@
 		7D9CE8C31F913EA80010A5FB /* Calculator */ = {
 			isa = PBXGroup;
 			children = (
-				7D9CE8C41F913EA80010A5FB /* AppDelegate.swift */,
+				7D9CE8D71F913F040010A5FB /* CalculatorBrain.swift */,
+				7D9CE8D61F913ED90010A5FB /* Supporting Files */,
 				7D9CE8C61F913EA80010A5FB /* ViewController.swift */,
 				7D9CE8C81F913EA80010A5FB /* Main.storyboard */,
+			);
+			path = Calculator;
+			sourceTree = "<group>";
+		};
+		7D9CE8D61F913ED90010A5FB /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				7D9CE8C41F913EA80010A5FB /* AppDelegate.swift */,
 				7D9CE8CB1F913EA80010A5FB /* Assets.xcassets */,
 				7D9CE8CD1F913EA80010A5FB /* LaunchScreen.storyboard */,
 				7D9CE8D01F913EA80010A5FB /* Info.plist */,
 			);
-			path = Calculator;
+			path = "Supporting Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -136,6 +147,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7D9CE8D81F913F040010A5FB /* CalculatorBrain.swift in Sources */,
 				7D9CE8C71F913EA80010A5FB /* ViewController.swift in Sources */,
 				7D9CE8C51F913EA80010A5FB /* AppDelegate.swift in Sources */,
 			);
@@ -276,7 +288,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = HPHQT8VPHG;
-				INFOPLIST_FILE = Calculator/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Calculator/Supporting Files/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = schisler.jason.appDev.Calculator;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -291,7 +303,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = HPHQT8VPHG;
-				INFOPLIST_FILE = Calculator/Info.plist;
+				INFOPLIST_FILE = "$(SRCROOT)/Calculator/Supporting Files/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = schisler.jason.appDev.Calculator;
 				PRODUCT_NAME = "$(TARGET_NAME)";
