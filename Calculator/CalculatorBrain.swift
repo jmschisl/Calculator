@@ -18,7 +18,13 @@ func multiply(op1: Double, op2: Double) -> Double {
 
 struct CalculatorBrain {
     
-    private var accumulator: (Double, String)?
+    private var stack = [Element]()
+    
+    private enum Element {
+        case operation(String)
+        case operand(Double)
+        case variable(String)
+    }
     
     private enum Operation {
         case constant(Double)
@@ -27,6 +33,19 @@ struct CalculatorBrain {
         case binaryOperation((Double, Double) -> Double, (String, String) -> String)
         case equals
     }
+    
+    private enum ErrorOperation {
+        case unaryOperation((Double) -> String?)
+        case binaryOperation((Double,Double) -> String?)
+    }
+    
+    private let errorOperations: Dictionary<String,ErrorOperation> = [
+        "√": ErrorOperation.unaryOperation({ 0.0 > $0 ? "Cannot Take Square Root of Negative Number" : nil }),
+        "÷": ErrorOperation.binaryOperation({ 1e-8 > fabs($1) ? "Cannot Divide by Zero" : nil }),
+        "x⁻¹" : ErrorOperation.unaryOperation({ 1e-8 > fabs($0) ? "Cannot Divide by Zero" : nil }),
+        "ln" : ErrorOperation.unaryOperation({ 0 > $0 ? "Cannot Take LN of Negative Number" : nil }),
+        "log" : ErrorOperation.unaryOperation({ 0 > $0 ? "Cannot Take LOG of Negative Number" : nil }),
+        ]
     
     private let operations: Dictionary<String,Operation> = [
         "Rand": Operation.nullaryOperation( { Double(arc4random()) / Double(UInt32.max) }, "rand()"),
@@ -55,74 +74,128 @@ struct CalculatorBrain {
         "=": Operation.equals
     ]
     
-    mutating func performOperation(_ symbol: String) {
-        if let operation = operations[symbol] {
-            switch operation {
-            case .constant(let value):
-                accumulator = (value, symbol)
-            case .nullaryOperation(let function, let description):
-                accumulator = (function(), description)
-            case .unaryOperation(let function, let description):
-                if nil != accumulator {
-                    accumulator = (function(accumulator!.0), description(accumulator!.1))
-                }
-            case .binaryOperation(let function, let description):
-                performPendingBinaryOperation()
-                if nil != accumulator {
-                    pendingBinaryOperation = PendingBinaryOperation(function: function, description: description, firstOperand: accumulator!)
-                    accumulator = nil
-                }
-            case .equals:
-                performPendingBinaryOperation()
-            }
-        }
-    }
-    
-    private mutating func performPendingBinaryOperation() {
-        if nil != pendingBinaryOperation && nil != accumulator {
-            accumulator = pendingBinaryOperation!.perform(with: accumulator!)
-            pendingBinaryOperation = nil
-        }
-    }
-    
-    private var pendingBinaryOperation: PendingBinaryOperation?
-    
-    private struct PendingBinaryOperation {
-        let function: (Double, Double) -> Double
-        let description: (String, String) -> String
-        let firstOperand: (Double, String)
-        
-        func perform(with secondOperand: (Double, String)) -> (Double, String) {
-            return (function(firstOperand.0, secondOperand.0), "(" + description(firstOperand.1, secondOperand.1) + ")")
-        }
-    }
-    
     mutating func setOperand(_ operand: Double) {
-        accumulator = (operand, "\(operand)")
+        stack.append(Element.operand(operand))
     }
     
+    mutating func setOperand(variable named: String) {
+        stack.append(Element.variable(named))
+    }
+    
+    mutating func performOperation(_ symbol: String) {
+        stack.append(Element.operation(symbol))
+    }
+    
+    mutating func undo() {
+        if !stack.isEmpty {
+            stack.removeLast()
+        }
+    }
+    
+    @available(*, deprecated, message: "Not Needed...")
     var result: Double? {
-        get {
-            if nil != accumulator {
-                return accumulator!.0
-            }
-            return nil        }
+        return evaluate().result
     }
     
+    @available(*, deprecated, message: "Not Needed...")
     var resultIsPending: Bool {
-        get {
-            return nil != pendingBinaryOperation
-        }
+        return evaluate().isPending
     }
     
+    @available(*, deprecated, message: "Not Needed...")
     var description: String? {
-        get {
-            if resultIsPending {
-                return pendingBinaryOperation!.description(pendingBinaryOperation!.firstOperand.1, accumulator?.1 ?? "")
-            } else {
-                return accumulator?.1
+        return evaluate().description
+    }
+    
+    func evaluate(using variables: Dictionary<String,Double>? = nil) -> (result: Double?, isPending: Bool, description: String, error: String?)
+    {
+        var error: String?
+        
+        var accumulator: (Double, String)?
+        
+        var pendingBinaryOperation: PendingBinaryOperation?
+        
+        struct PendingBinaryOperation {
+            let symbol: String
+            let function: (Double, Double) -> Double
+            let description: (String, String) -> String
+            let firstOperand: (Double, String)
+            
+            func perform(with secondOperand: (Double, String)) -> (Double, String) {
+                return (function(firstOperand.0, secondOperand.0), "(" + description(firstOperand.1, secondOperand.1) + ")")
             }
         }
+        
+        func performPendingBinaryOperation() {
+            if nil != pendingBinaryOperation && nil != accumulator {
+                if let errorOperation = errorOperations[pendingBinaryOperation!.symbol],
+                    case .binaryOperation(let errorFunction) = errorOperation {
+                    error = errorFunction(pendingBinaryOperation!.firstOperand.0, accumulator!.0)
+                }
+                accumulator = pendingBinaryOperation!.perform(with: accumulator!)
+                pendingBinaryOperation = nil
+            }
+        }
+        
+        var result: Double? {
+            get {
+                if nil != accumulator {
+                    return accumulator!.0
+                }
+                return nil
+            }
+        }
+        
+        var description: String? {
+            get {
+                if pendingBinaryOperation != nil {
+                    return pendingBinaryOperation!.description(pendingBinaryOperation!.firstOperand.1, accumulator?.1 ?? "")
+                } else {
+                    return accumulator?.1
+                }
+            }
+        }
+        
+        for element in stack {
+            switch element {
+            case .operand(let value):
+                accumulator = (value, "\(value)")
+            case .operation(let symbol):
+                if let operation = operations[symbol] {
+                    switch operation {
+                    case .constant(let value):
+                        accumulator = (value, symbol)
+                    case .nullaryOperation(let function, let description):
+                        accumulator = (function(), description)
+                    case .unaryOperation(let function, let description):
+                        if nil != accumulator {
+                            if let errorOperation = errorOperations[symbol],
+                                case .unaryOperation(let errorFunction) = errorOperation {
+                                error = errorFunction(accumulator!.0)
+                            }
+                            accumulator = (function(accumulator!.0), description(accumulator!.1))
+                        }
+                    case .binaryOperation(let function, let description):
+                        performPendingBinaryOperation()
+                        if nil != accumulator {
+                            pendingBinaryOperation = PendingBinaryOperation(symbol: symbol, function: function, description: description, firstOperand: accumulator!)
+                            accumulator = nil
+                        }
+                    case .equals:
+                        performPendingBinaryOperation()
+                    }
+                }
+            case .variable(let symbol):
+                if let value = variables?[symbol] {
+                    accumulator = (value, symbol)
+                }
+                else {
+                    accumulator = (0,symbol)
+                }
+            }
+        }
+        
+        return (result, nil != pendingBinaryOperation, description ?? "", error)
     }
 }
 

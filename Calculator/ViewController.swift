@@ -58,6 +58,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var display: UILabel!
     
     @IBOutlet weak var descriptionDisplay: UILabel!
+    @IBOutlet weak var memoryDisplay: UILabel!
     
     @IBOutlet weak var decimalSeparatorButton: UIButton!
     
@@ -65,14 +66,30 @@ class ViewController: UIViewController {
     
     var userIsInTheMiddleOfTyping = false
     
+    private func displayResult() {
+        let evaluated = brain.evaluate(using: variables)
+        if let error = evaluated.error {
+            display.text = error
+        }
+        else if let result = evaluated.result {
+            displayValue = result
+        }
+        if evaluated.description != "" {
+            descriptionDisplay.text = evaluated.description.beautifyNumbers() + (evaluated.isPending ? "…" : "=")
+        } else {
+            descriptionDisplay.text = " "
+        }
+    }
+    
     @IBAction func reset(_ sender: UIButton) {
         brain = CalculatorBrain()
         displayValue = 0
         descriptionDisplay.text = " "
         userIsInTheMiddleOfTyping = false
+        variables = Dictionary<String, Double>()
     }
     
-    @IBAction func backspace(_ sender: UIButton) {
+    @IBAction func undo(_ sender: UIButton) {
         if userIsInTheMiddleOfTyping, var text = display.text {
             text.remove(at: text.index(before: text.endIndex))
             if text.isEmpty || text == "0" {
@@ -81,7 +98,31 @@ class ViewController: UIViewController {
             }
             display.text = text
         }
+        else {
+            brain.undo()
+            displayResult()
+        }
     }
+    
+    private var variables = Dictionary<String,Double>() {
+        didSet {
+            memoryDisplay.text = variables.flatMap{$0+":\($1)"}.joined(separator: ", ").beautifyNumbers()
+        }
+    }
+    
+    
+    @IBAction func setMemory(_ sender: UIButton) {
+        variables["M"] = displayValue
+        userIsInTheMiddleOfTyping = false
+        displayResult()
+    }
+    
+    @IBAction func getMemory(_ sender: UIButton) {
+        brain.setOperand(variable: "M")
+        userIsInTheMiddleOfTyping = false
+        displayResult()
+    }
+    
     
     @IBAction func touchDigit(_ sender: UIButton) {
         let digit = sender.currentTitle!
@@ -129,16 +170,7 @@ class ViewController: UIViewController {
         if let mathematicalSymbol = sender.currentTitle {
             brain.performOperation(mathematicalSymbol)
         }
-        
-        if let description = brain.description {
-            descriptionDisplay.text = description.beautifyNumbers() + (brain.resultIsPending ? "…" : "=")
-        } else {
-            descriptionDisplay.text = " "
-        }
-        
-        if let result = brain.result {
-            displayValue = result
-        }
+        displayResult()
     }
     
     // function to adjust the button layout

@@ -56,10 +56,10 @@
 		7D9CE8C31F913EA80010A5FB /* Calculator */ = {
 			isa = PBXGroup;
 			children = (
+				7D9CE8C81F913EA80010A5FB /* Main.storyboard */,
 				7D9CE8D71F913F040010A5FB /* CalculatorBrain.swift */,
 				7D9CE8D61F913ED90010A5FB /* Supporting Files */,
 				7D9CE8C61F913EA80010A5FB /* ViewController.swift */,
-				7D9CE8C81F913EA80010A5FB /* Main.storyboard */,
 			);
 			path = Calculator;
 			sourceTree = "<group>";
